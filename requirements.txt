@@ -1,0 +1,9 @@
+Flask>=3.0
+pypdf>=5.0
+pytesseract>=0.3.10
+Pillow>=10.0
+requests>=2.31
+
+# System dependencies (install separately, not via pip):
+#   tesseract-ocr   -> OCR engine, e.g. `apt install tesseract-ocr` / `brew install tesseract`
+#   poppler-utils   -> provides `pdftoppm`, e.g. `apt install poppler-utils` / `brew install poppler`
