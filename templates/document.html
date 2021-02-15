@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% block title %}{{ doc.title }} — Docent{% endblock %}
+
+{% block content %}
+<a href="{{ url_for('library') }}" class="back-link">← back to the shelf</a>
+
+<article class="reading-room">
+  <div class="detail-card">
+    <div class="detail-card-punch"></div>
+    <span class="detail-type">{{ doc.doc_type }}</span>
+    <h1 class="detail-title">{{ doc.title }}</h1>
+    <p class="detail-summary">{{ doc.summary }}</p>
+
+    <div class="index-card-tags">
+      {% for tag in doc.tags.split(', ') if tag %}
+        <span class="stamp">{{ tag }}</span>
+      {% endfor %}
+    </div>
+
+    <dl class="detail-meta">
+      <dt>Original file</dt><dd>{{ doc.original_filename }}</dd>
+      <dt>Filed</dt><dd>{{ doc.created_at[:19].replace('T', ' ') }}</dd>
+      <dt>Read by</dt><dd>{{ 'Docent (LLM: ' + doc.source.split(':')[1] + ')' if doc.source.startswith('llm') else 'Docent (local heuristic — no API key set)' }}</dd>
+    </dl>
+
+    <div class="detail-actions">
+      <a href="{{ url_for('uploaded_file', filename=doc.stored_filename) }}" class="btn btn-ghost" target="_blank">View original</a>
+      <form action="{{ url_for('retag', doc_id=doc.id) }}" method="post">
+        <button type="submit" class="btn btn-ghost">Ask Docent to re-read it</button>
+      </form>
+      <form action="{{ url_for('delete', doc_id=doc.id) }}" method="post" onsubmit="return confirm('Withdraw this from the catalog?');">
+        <button type="submit" class="btn btn-danger">Withdraw</button>
+      </form>
+    </div>
+  </div>
+
+  <div class="transcript">
+    <h2 class="transcript-heading">Extracted text</h2>
+    <pre class="transcript-body">{{ doc.raw_text or '(no text extracted)' }}</pre>
+  </div>
+</article>
+{% endblock %}
