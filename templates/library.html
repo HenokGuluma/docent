@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+{% block title %}Docent — the catalog{% endblock %}
+
+{% block content %}
+<section class="intake">
+  <form action="{{ url_for('upload') }}" method="post" enctype="multipart/form-data" class="dropzone" id="dropzone">
+    <input type="file" name="file" id="file-input" accept=".pdf,.png,.jpg,.jpeg,.tif,.tiff" hidden required>
+    <label for="file-input" class="dropzone-label">
+      <span class="dropzone-mark">＋</span>
+      <span class="dropzone-text">Drop a scan or PDF, or click to choose one</span>
+      <span class="dropzone-sub">Docent will read it and write the catalog card itself</span>
+    </label>
+    <button type="submit" class="dropzone-submit" id="submit-btn" hidden>Hand it to Docent →</button>
+  </form>
+</section>
+
+<section class="catalog-controls">
+  <form action="{{ url_for('library') }}" method="get" class="search-form">
+    <input type="text" name="q" value="{{ query }}" placeholder="Search titles, tags, full text…" class="search-input">
+    {% if active_type %}<input type="hidden" name="type" value="{{ active_type }}">{% endif %}
+    <button type="submit" class="search-submit">Search</button>
+  </form>
+
+  <div class="type-filters">
+    <a href="{{ url_for('library', q=query) }}" class="type-chip {% if not active_type %}active{% endif %}">all · {{ total }}</a>
+    {% for t in doc_types %}
+      <a href="{{ url_for('library', q=query, type=t.doc_type) }}" class="type-chip {% if active_type == t.doc_type %}active{% endif %}">{{ t.doc_type }} · {{ t.n }}</a>
+    {% endfor %}
+  </div>
+</section>
+
+<section class="shelf">
+  {% if documents %}
+    <div class="card-grid">
+      {% for doc in documents %}
+        <a href="{{ url_for('document_detail', doc_id=doc.id) }}" class="index-card">
+          <div class="index-card-punch"></div>
+          <div class="index-card-type">{{ doc.doc_type }}</div>
+          <h3 class="index-card-title">{{ doc.title }}</h3>
+          <p class="index-card-summary">{{ doc.summary }}</p>
+          <div class="index-card-tags">
+            {% for tag in doc.tags.split(', ') if tag %}
+              <span class="stamp">{{ tag }}</span>
+            {% endfor %}
+          </div>
+          <div class="index-card-meta">
+            <span>{{ doc.created_at[:10] }}</span>
+            <span class="meta-source">{{ 'AI-read' if doc.source.startswith('llm') else 'locally read' }}</span>
+          </div>
+        </a>
+      {% endfor %}
+    </div>
+  {% else %}
+    <div class="empty-shelf">
+      <p>The shelf is empty.</p>
+      <p class="empty-sub">Drop a document above — Docent reads it in a few seconds and files it here.</p>
+    </div>
+  {% endif %}
+</section>
+
+<script>
+  const input = document.getElementById('file-input');
+  const dropzone = document.getElementById('dropzone');
+  const submitBtn = document.getElementById('submit-btn');
+  const label = dropzone.querySelector('.dropzone-text');
+
+  input.addEventListener('change', () => {
+    if (input.files.length) {
+      label.textContent = input.files[0].name;
+      submitBtn.hidden = false;
+    }
+  });
+
+  ['dragover', 'dragleave', 'drop'].forEach(evt => {
+    dropzone.addEventListener(evt, e => e.preventDefault());
+  });
+  dropzone.addEventListener('dragover', () => dropzone.classList.add('is-dragging'));
+  dropzone.addEventListener('dragleave', () => dropzone.classList.remove('is-dragging'));
+  dropzone.addEventListener('drop', e => {
+    dropzone.classList.remove('is-dragging');
+    if (e.dataTransfer.files.length) {
+      input.files = e.dataTransfer.files;
+      label.textContent = e.dataTransfer.files[0].name;
+      submitBtn.hidden = false;
+    }
+  });
+</script>
+{% endblock %}
